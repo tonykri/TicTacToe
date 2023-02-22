@@ -1,5 +1,5 @@
-from game import TicTacToe
+from TicTacToe import TicTacToe
 
-g = TicTacToe()
-g.trainAI()
-g.play()
+game = TicTacToe()
+game.trainAI()
+game.play()

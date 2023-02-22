@@ -1,5 +1,5 @@
 import numpy as np
-from agent import AIPlayer
+from AIPlayer import AIPlayer
 
 
 class TicTacToe:
@@ -147,7 +147,7 @@ class TicTacToe:
             
             n_iterations -= 1
 
-        print('Games played: ', n_iterations)
+        print('Games played: ', self.AIwins + self.AIloses + self.AIties)
         print('AI wins: ', self.AIwins)
         print('AI loses: ', self.AIloses)
         print('Tie: ', self.AIties)
