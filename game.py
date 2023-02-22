@@ -1,9 +1,11 @@
 import numpy as np
+from agent import AIPlayer
 
 
 class TicTacToe:
-    def __init__(self, aiplayer):
-        self.AIplayer = aiplayer
+    def __init__(self):
+        self.AIplayer = AIPlayer(27,9)
+        self.AItrainer = AIPlayer(27,9)
         self.board = np.array([' '] * 9)
         self.AIwins = 0
         self.AIloses = 0
@@ -22,6 +24,7 @@ class TicTacToe:
         print(self.board[0],'|',self.board[1],'|',self.board[2])
         print(self.board[3],'|',self.board[4],'|',self.board[5])
         print(self.board[6],'|',self.board[7],'|',self.board[8])
+        print('-------------------')
 
 
     def available_moves(self):
@@ -30,35 +33,39 @@ class TicTacToe:
             if cell == ' ': moves.append(idx)
         return moves
 
-    def game_over(self, agent, state, move, next_state):
+    def game_over(self, state, move, next_state):
         board = self.board.reshape(3,3)
         for row in board:
             win = True
             for cel in row:
                 if cel in ['O', ' ']: win = False
             if win:
-                agent.store_episode(state, move, 200, next_state, True)
-                agent.train()
+                self.AIplayer.store_episode(state, move, 200, next_state, True)
+                self.AItrainer.store_episode(state, move, -200, next_state, True)
+                self.AIplayer.train()
                 self.AIwins += 1
                 return True
 
         for i in range(3):
             if board[0][i] == board[1][i] == board[2][i] == 'X':
-                agent.store_episode(state, move, 200, next_state, True)
+                self.AIplayer.store_episode(state, move, 200, next_state, True)
+                self.AItrainer.store_episode(state, move, -200, next_state, True)
                 self.AIwins += 1
-                agent.train()
+                self.AIplayer.train()
                 return True
         
         if board[0][0] == board[1][1] == board[2][2] == 'X':
-            agent.store_episode(state, move, 200, next_state, True)
+            self.AIplayer.store_episode(state, move, 200, next_state, True)
+            self.AItrainer.store_episode(state, move, -200, next_state, True)
             self.AIwins += 1
-            agent.train()
+            self.AIplayer.train()
             return True
 
         if board[0][2] == board[1][1] == board[2][0] == 'X':
-            agent.store_episode(state, move, 200, next_state, True)
+            self.AIplayer.store_episode(state, move, 200, next_state, True)
+            self.AItrainer.store_episode(state, move, -200, next_state, True)
             self.AIwins += 1
-            agent.train()
+            self.AIplayer.train()
             return True
 
 
@@ -67,28 +74,32 @@ class TicTacToe:
             for cel in row:
                 if cel in ['X', ' ']: lose = False
             if lose:
-                agent.store_episode(state, move, -200, next_state, True)
+                self.AIplayer.store_episode(state, move, -200, next_state, True)
+                self.AItrainer.store_episode(state, move, 200, next_state, True)
                 self.AIloses += 1
-                agent.train()
+                self.AIplayer.train()
                 return True
 
         for i in range(3):
             if board[0][i] == board[1][i] == board[2][i] == 'O':
-                agent.store_episode(state, move, -200, next_state, True)
+                self.AIplayer.store_episode(state, move, -200, next_state, True)
+                self.AItrainer.store_episode(state, move, 200, next_state, True)
                 self.AIloses += 1
-                agent.train()
+                self.AIplayer.train()
                 return True
         
         if board[0][0] == board[1][1] == board[2][2] == 'O':
-            agent.store_episode(state, move, -200, next_state, True)
+            self.AIplayer.store_episode(state, move, -200, next_state, True)
+            self.AItrainer.store_episode(state, move, 200, next_state, True)
             self.AIloses += 1
-            agent.train()
+            self.AIplayer.train()
             return True
 
         if board[0][2] == board[1][1] == board[2][0] == 'O':
-            agent.store_episode(state, move, -200, next_state, True)
+            self.AIplayer.store_episode(state, move, -200, next_state, True)
+            self.AItrainer.store_episode(state, move, 200, next_state, True)
             self.AIloses += 1
-            agent.train()
+            self.AIplayer.train()
             return True
         
 
@@ -98,12 +109,14 @@ class TicTacToe:
                 if cel in [' ']: over = False
         
         if over:
-            agent.store_episode(state, move, 50, next_state, True)
+            self.AIplayer.store_episode(state, move, 50, next_state, True)
+            self.AItrainer.store_episode(state, move, 50, next_state, True)
             self.AIties += 1
-            agent.train()
+            self.AIplayer.train()
             return True
         
-        agent.store_episode(state, move, 0, next_state, False)
+        self.AIplayer.store_episode(state, move, 0, next_state, False)
+        self.AItrainer.store_episode(state, move, 0, next_state, False)
         return False
 
 
@@ -120,11 +133,13 @@ class TicTacToe:
                 first_player = not first_player
             else:
                 available_moves = self.available_moves()
-                move = np.random.choice(available_moves)
+                state = self.encode_input()
+                move = self.AItrainer.compute_action(state,available_moves)
                 self.board[move] = 'O'
+                next_state = self.encode_input()
                 first_player = not first_player
 
-            if self.game_over(self.AIplayer, state, move, next_state):
+            if self.game_over(state, move, next_state):
                 self.show_board()
                 self.board = np.array([' '] * 9)
                 if self.AIplayer.exploration_proba > 0.001:
@@ -142,12 +157,16 @@ class TicTacToe:
         first_player = True
         self.board = np.array([' '] * 9)
         while True:
-            print('Press 0 to stop playing')
+            print('Press number 0 to stop')
             self.show_board()
             state = self.encode_input()
             if first_player:
                 move = int(input('Pick an index: ')) - 1
                 if move == -1: return
+                moves = self.available_moves()
+                while move not in moves:
+                    print('Give a valid index')
+                    move = int(input('Pick an index: ')) - 1
                 self.board[move] = 'O'
                 first_player = not first_player
             else:
@@ -157,6 +176,6 @@ class TicTacToe:
                 first_player = not first_player
             
             next_state = self.encode_input()
-            if self.game_over(self.AIplayer, state, move, next_state):
+            if self.game_over(state, move, next_state):
                     self.show_board()
                     self.board = np.array([' '] * 9)
