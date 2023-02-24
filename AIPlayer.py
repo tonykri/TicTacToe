@@ -1,6 +1,6 @@
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, BatchNormalization
 from keras.optimizers import Adam
 
 
@@ -8,16 +8,17 @@ class AIPlayer:
     def __init__(self, state_size, action_size):
         self.n_actions = action_size
         self.lr = 0.5
-        self.gamma = 0.99
+        self.gamma = 0.9
         self.exploration_proba = 1.0
         self.exploration_proba_decay = 0.005
-        self.batch_size = 9
+        self.batch_size = 15
         
         self.memory_buffer= list()
-        self.max_memory_buffer = 2000
+        self.max_memory_buffer = 500
         
         self.model = Sequential([
             Dense(units=35,input_dim=state_size, activation = 'relu'),
+            BatchNormalization(),
             Dense(units=20, activation = 'relu'),
             Dense(units=action_size, activation = 'softmax')
         ])

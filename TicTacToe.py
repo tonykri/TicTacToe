@@ -120,10 +120,10 @@ class TicTacToe:
         return False
 
 
-    def trainAI(self, n_iterations=1000):
+    def trainAI(self, games=1000):
         self.show_board()
         first_player = True
-        while n_iterations>0:
+        while games>0:
             if first_player:
                 available_moves = self.available_moves()
                 state = self.encode_input()
@@ -142,15 +142,18 @@ class TicTacToe:
             if self.game_over(state, move, next_state):
                 self.show_board()
                 self.board = np.array([' '] * 9)
-                if self.AIplayer.exploration_proba > 0.001:
+                if self.AIplayer.exploration_proba > 0.2:
                     self.AIplayer.update_exploration_probability()
-            
-            n_iterations -= 1
+                    self.AItrainer.update_exploration_probability()
 
-        print('Games played: ', self.AIwins + self.AIloses + self.AIties)
-        print('AI wins: ', self.AIwins)
-        print('AI loses: ', self.AIloses)
-        print('Tie: ', self.AIties)
+                print('Games played: ', self.AIwins + self.AIloses + self.AIties)
+                print('AI wins: ', self.AIwins)
+                print('AI loses: ', self.AIloses)
+                print('Tie: ', self.AIties)
+
+                games -= 1
+
+            
 
 
     def play(self):
